@@ -24,3 +24,7 @@ These files can be later used for further analysis.
 ## Numerical analysis
 A simple python script performs this analysis and generates plots.  
 It generates and tests the theoretical results of the performance analysis.
+
+## Security Formal Analysis with Scyther
+To run this script, you need Scyther tool (https://people.cispa.io/cas.cremers/scyther/).  
+Just upload the script in the tool and run it. 
