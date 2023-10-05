@@ -1,0 +1,138 @@
+/* Formal analysis of PQ-IBE authenticaton scheme for dynamic charging of EV
+*  The interesting messages for this analysis are m1, m2, m4, m5
+*  The security of the internal network of CSPA is assumed
+*  The last part of the authentication is hash-chain and considered secure
+*  
+*  Integrate also RSU and CP in the analsyis
+*/
+
+// hash chain definition
+hashfunction H;
+hashfunction Hsha;
+
+usertype Pseudonym; // EV pseudonym
+usertype SecretToken; // secret to use during authentication
+usertype CommonSecret, Timestamp, SecretRandom, GroupKey, SessionKey;
+
+// commitment for last message verification (before hash-chain)
+usertype Commitment; 
+
+protocol pqibe(EV, CSPA, RSU, CP)
+{
+	role EV
+	{
+		// it is constant for the protocol run
+		secret PS: Pseudonym; 	
+
+		fresh Zi: CommonSecret;
+		fresh Nev, Nrsu: Nonce;
+		fresh T1, T4: Timestamp;
+		// modelled as fresh created by EV and CSPA on their own
+		fresh Kaes: SessionKey; 
+
+		var Ncspa, Mev, Nrsu1: Nonce;
+		var T2, T5: Timestamp;
+		var Ai: CommonSecret;
+		var T: SecretToken;
+		
+		// sends m1 with the pseudonym, the nonce, 
+		// common secret, and the timestamp
+		send_1(EV, CSPA, {PS, Nev, T1, Zi}pk(CSPA));
+
+		// receives m2
+		recv_2(CSPA, EV, {T, Ncspa, T2, Ai}pk(EV));
+		
+		// sends m4 to RSU with the AES key
+		send_4(EV, RSU, {PS, Nrsu, T4}Kaes);
+
+		// receives m5 with the value Mev to build the hash chain
+		recv_5(RSU, EV, {Nrsu1, Mev, T5}Kaes);
+
+		// sends the hash^-1 in order to authenticate with the CP
+		send_7(EV, CP, H(H(T), H(Mev)));
+
+		// claims
+		claim_ev1(EV, Secret, PS);
+		claim_ev2(EV, Niagree);
+		claim_ev3(EV, Nisynch);
+		claim_ev4(EV, Secret, T);
+	}
+
+	role CSPA
+	{	
+		fresh T2, T3: Timestamp;
+		fresh Ncspa: Nonce;
+		fresh Ai: CommonSecret;
+		fresh T: SecretToken;
+		// modelled as fresh created by EV and CSPA on their own
+		fresh Kaes: SessionKey; 
+		fresh Kcsparsu: GroupKey;
+
+		var T1: Timestamp;
+		var PS: Pseudonym;
+		var Nev: Nonce;
+		var Zi: CommonSecret;
+
+		// receives m1
+		recv_1(EV, CSPA, {PS, Nev, T1, Zi}pk(CSPA));
+		
+		// sends m2 with the nonce, common secret, and the token
+		send_2(CSPA, EV, {T, Ncspa, T2, Ai}pk(EV));
+
+		// sends m3 to RSU using symmetric group key
+		send_3(CSPA, RSU, {Hsha(T), PS, Kaes, T3}Kcsparsu);
+
+		// claims
+		claim_cspa1(CSPA, Secret, PS);
+		claim_cspa2(CSPA, Niagree);
+		claim_cspa3(CSPA, Nisynch);
+		claim_cspa4(CSPA, Secret, T);
+	}
+
+	role RSU
+	{
+		fresh Kcsparsu, Krsucp: GroupKey;
+		fresh Nrsu1, Mev: Nonce;
+		fresh T5: Timestamp;
+
+		var T: SecretToken;
+		var PS: Pseudonym;
+		var T3, T4: Timestamp;
+		var Kaes: SessionKey;
+		var Nrsu: Nonce;
+
+		// receives m3 and get the info inside it
+		recv_3(CSPA, RSU, {Hsha(T), PS, Kaes, T3}Kcsparsu);
+
+		// receives m4
+		recv_4(EV, RSU, {PS, Nrsu, T4}Kaes);
+
+		// sends back m5
+		send_5(RSU, EV, {Nrsu1, Mev, T5}Kaes);
+
+		// sends m6 to the first pad with the group key
+		send_6(RSU, CP, {H(H(H(T), H(Mev)))}Krsucp);
+
+		// claims
+		claim_rsu1(RSU, Secret, PS);
+	}
+
+	// simulating as last pad, so using H(H(||)) as hash-chain
+	role CP
+	{
+		fresh Krsucp: GroupKey;
+
+		var T: SecretToken;
+		var Mev: Nonce;
+
+		// receives m6 from RSU
+		recv_6(RSU, CP, {H(H(H(T), H(Mev)))}Krsucp);
+
+		// receives the hash from EV and check validty
+		recv_7(EV, CP, H(H(T), H(Mev)));
+
+		// claims
+		
+	}
+	
+}

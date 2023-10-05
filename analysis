@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+import matplotlib.pyplot as plt
+# from matplotlib.ticker import MultipleLocator
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+# open files fron results and take last line with total time for each pad
+# path = 'pq-ibe-results/'
+
+# times_per_pads = []
+
+# for i in range(1,201):
+#     f = open(path+'tracefile_'+str(i)+'_simulation.txt')
+#     for lines in f:
+#         pass
+#     last_line = lines
+#     times_per_pads.append(float(lines.strip().split(' ')[2][1:-1]))
+
+# n_pads = list(range(1, 201))
+
+# sns.set()
+# sns.lineplot(x=n_pads, y=times_per_pads, linewidth=2)
+# plt.xlabel('Number of Pads', fontsize=12)
+# plt.ylabel('Time (s)', fontsize=12)
+# # plt.show()
+# plt.savefig('time_vs_npads.pdf')
+
+
+################### Speed vs Len of the firts pad #########################
+
+v = np.arange(1, 131, 1)
+# v = [10, 30, 50, 70, 90, 110, 130]
+n = [1, 10, 50, 100, 150, 200]# number of pads
+
+v_n_lengths = []
+for pads in n:
+    for speed in v:
+        L_pad = (speed/3.6)*(0.28212+pads*0.00036)
+        v_n_lengths.append([L_pad, speed, pads])
+
+df = pd.DataFrame(v_n_lengths, columns=['Length', 'Speed', '# Pads'])
+print(df)
+for pads in n:
+    print('Max length per speed:', df[df['# Pads']==pads].max())
+
+sns.set()
+sns.lineplot(data=df, x='Length', y='Speed', hue='# Pads')
+plt.xlabel('Length (m)', fontsize=12)
+plt.ylabel('Speed (Km/h)', fontsize=12)
+# plt.savefig('v_vs_len.pdf')
+plt.show()
