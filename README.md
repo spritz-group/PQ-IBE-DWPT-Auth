@@ -1,5 +1,5 @@
-# Privacy Preserving Post Quantum IBE Authentication Protocol for Electric Vehicle Dynamic Charging
-This repository contains the simulation and analysis scripts for the **Privacy Preserving Post Quantum IBE Authentication Protocol for Electric Vehicle Dynamic Charging** research paper. 
+# DynamiQS: Quantum Secure Authentication for Dynamic Charging of Electric Vehicles
+This repository contains the simulation and analysis scripts for the **DynamiQS: Quantum Secure Authentication for Dynamic Charging of Electric Vehicles** research paper. 
 
 ## Run the ns-3 simulation
 To run it, ns-3.38 is required. Once downloaded and installed, copy the pq-ibe.cc script inside the scratch/ folder in ns-3.38.  
